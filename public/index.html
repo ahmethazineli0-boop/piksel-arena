@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#07060f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Piksel Arena">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Piksel Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%2312082a'/><rect x='3' y='3' width='4' height='4' fill='%23ffd23f'/><rect x='9' y='3' width='4' height='4' fill='%23ff3ea5'/><rect x='3' y='9' width='10' height='4' fill='%237df9ff'/></svg>">
+</head>
+<body class="scr-menu">
+<canvas id="game"></canvas>
+<div id="loading" class="loading">3D sahne yükleniyor...</div>
+
+<!-- ============ ANA MENÜ ============ -->
+<section id="menu" class="screen active">
+  <div class="menu-card">
+    <h1 class="logo"><span>PİKSEL</span><span>ARENA</span></h1>
+    <p class="tagline" id="tagline">Arkadaşınla online, piksel piksel kapış.</p>
+    <p class="version">SÜRÜM 3.2 · 3D · TELEFONDA TEK BAŞINA OYNANIR · Üçlü · Hikaye · Dükkan</p>
+    <label class="field">
+      <span>Adın</span>
+      <input id="nameInput" maxlength="14" placeholder="Savaşçı adın" autocomplete="off">
+    </label>
+    <button id="btnCreate" class="btn big primary">ODA KUR</button>
+    <div class="or online-only"><span>ya da arkadaşının odasına katıl</span></div>
+    <div class="join-row online-only">
+      <input id="roomInput" maxlength="6" placeholder="ODA KODU" autocomplete="off">
+      <button id="btnJoin" class="btn big">KATIL</button>
+    </div>
+    <p id="menuStatus" class="status"></p>
+    <p class="hint" id="modeNote">Sunucuyu açan kişi odayı kurar, kodu arkadaşına söyler.</p>
+  </div>
+</section>
+
+<!-- ============ LOBİ ============ -->
+<section id="lobby" class="screen">
+  <header class="topbar">
+    <div class="brand">PİKSEL<b>ARENA</b> <small>v3.2</small></div>
+    <div class="room-chip" id="roomChip" title="Kopyalamak için tıkla">ODA <b id="roomCode">----</b> <span class="copy">⧉ davet linkini kopyala</span></div>
+    <div class="top-right">
+      <span id="ping" class="ping">— ms</span>
+      <button id="btnKeys" class="btn small">⌨ Tuşlar</button>
+      <button id="btnSound" class="btn small">🔊</button>
+      <button id="btnLeave" class="btn small danger">Çık</button>
+    </div>
+  </header>
+
+  <div class="lobby-grid">
+    <!-- Sol: karakter -->
+    <div class="panel chars">
+      <h2>KARAKTERİNİ SEÇ</h2>
+      <div id="charGrid" class="char-grid"></div>
+      <div class="char-detail">
+        <div class="preview-wrap">
+          <canvas id="preview" width="300" height="276"></canvas>
+          <div class="preview-name"><b id="cName">KAAN</b><span id="cTitle">Alev Ronin</span></div>
+        </div>
+        <div class="char-info">
+          <p id="cDesc" class="desc"></p>
+          <div id="cBars" class="bars"></div>
+          <div class="passive"><b id="cPassive"></b><span id="cPassiveDesc"></span></div>
+        </div>
+      </div>
+      <div id="cMoves" class="moves"></div>
+    </div>
+
+    <!-- Orta: sekmeler -->
+    <div class="panel custom">
+      <div class="tabs">
+        <button class="tab sel" data-tab="tabCustom">ÖZELLEŞTİR</button>
+        <button class="tab" data-tab="tabShop">DÜKKAN</button>
+        <button class="tab" data-tab="tabStory">HİKAYE</button>
+      </div>
+      <div id="tabCustom" class="tab-body">
+      <div class="sub">Kostüm paletleri</div>
+      <div id="palettes" class="palettes"></div>
+      <div class="colors">
+        <label><span>Üst renk</span><input type="color" id="colPrimary"></label>
+        <label><span>Alt renk</span><input type="color" id="colSecondary"></label>
+        <label><span>Aura / aksesuar</span><input type="color" id="colAura"></label>
+      </div>
+      <div class="sub">Aksesuar</div>
+      <div id="accList" class="acc-list"></div>
+      <label class="field small">
+        <span>Unvan (isminin altında görünür)</span>
+        <input id="titleInput" maxlength="18" placeholder="örn. Boğazın Kralı" autocomplete="off">
+      </label>
+      <button id="btnResetCustom" class="btn small ghost">Varsayılana dön</button>
+      </div>
+
+      <div id="tabShop" class="tab-body hidden">
+        <div class="gold-row"><span class="gold">💰 <b id="goldAmt">0</b> altın</span><span class="hint-l">Ekipmanlar sadece <b>Hikaye</b> modunda etkilidir. Altın, boss yenerek kazanılır.</span></div>
+        <div id="shopList" class="shop-list"></div>
+        <div id="powerInfo" class="power-info"></div>
+      </div>
+
+      <div id="tabStory" class="tab-body hidden">
+        <div class="story-card">
+          <div class="boss-wrap"><canvas id="bossPreview" width="256" height="224"></canvas></div>
+          <div class="story-info">
+            <div class="story-ch" id="storyTitle">Bölüm 1</div>
+            <div class="story-boss"><b id="storyBoss">KARA RIFKI</b> <span id="storyBossTitle"></span></div>
+            <div class="story-meta"><span id="storyLevel">Seviye 1</span> · <span id="storyStage"></span> · Ödül <b id="storyReward">0</b> altın</div>
+          </div>
+        </div>
+        <p id="storyIntro" class="story-intro"></p>
+        <p id="storyTip" class="story-tip"></p>
+        <label class="field small">
+          <span>Bölüm seç (oda sahibi)</span>
+          <select id="setChapter"></select>
+        </label>
+        <div class="chapters" id="chapterDots"></div>
+        <p class="hint-l">Kendi ilerlemen: <b id="myProgress">Bölüm 1</b>. Arkadaşınla oynarken en ileri gidenin bölümleri açılır. Düşen arkadaşını, yanına gidip <b>↓ basılı tutarak</b> dirilt!</p>
+      </div>
+    </div>
+
+    <!-- Sağ: oyuncular, ayarlar, sohbet -->
+    <div class="panel side">
+      <div class="mode-row">
+        <label>Mod<select id="setMode"></select></label>
+      </div>
+      <div class="versus" id="versus">
+        <div class="slot" id="slot0"></div>
+        <div class="slot" id="slot1"></div>
+        <div class="slot" id="slot2"></div>
+      </div>
+      <p id="spectators" class="spectators"></p>
+      <div class="settings" id="pvpSettings">
+        <label>Raunt<select id="setWins"><option value="1">Tek raunt</option><option value="2">3'te 2</option><option value="3">5'te 3</option></select></label>
+        <label>Süre<select id="setTime"><option value="45">45 sn</option><option value="60">60 sn</option><option value="99">99 sn</option><option value="0">Sınırsız</option></select></label>
+        <label>Arena<select id="setStage"></select></label>
+        <label>Can<select id="setHp"><option value="0.5">%50</option><option value="0.75">%75</option><option value="1">%100</option><option value="1.5">%150</option><option value="2">%200</option></select></label>
+      </div>
+      <div id="storySettings" class="story-mini hidden"></div>
+      <div class="bot-row">
+        <button id="btnBot" class="btn small">🤖 Boş koltuğa bot ekle</button>
+      </div>
+      <button id="btnReady" class="btn big primary ready-btn">HAZIRIM</button>
+      <div id="countdown" class="countdown hidden"></div>
+      <div class="chat">
+        <div id="chatLog" class="chat-log"></div>
+        <form id="chatForm" class="chat-form">
+          <input id="chatInput" maxlength="160" placeholder="Mesaj yaz..." autocomplete="off">
+          <button class="btn small">Gönder</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DÖVÜŞ ============ -->
+<section id="fight" class="screen">
+  <canvas id="hud"></canvas>
+  <div class="fight-tools">
+    <button id="btnMute2" class="btn tiny" title="Ses (M)">🔊</button>
+    <button id="btnFull" class="btn tiny" title="Tam ekran (F)">⛶</button>
+    <button id="btnHelp" class="btn tiny" title="Tuşlar">?</button>
+  </div>
+  <div id="fightChat" class="fight-chat"></div>
+  <form id="fightChatForm" class="fight-chat-form hidden">
+    <input id="fightChatInput" maxlength="160" placeholder="Mesaj yaz, Enter ile gönder (Esc: iptal)" autocomplete="off">
+  </form>
+  <div class="fight-hint" id="fightHint">Enter: sohbet · 1-4: laf at · M: ses · F: tam ekran</div>
+  <div id="spectatorTag" class="spectator-tag hidden">İZLEYİCİ MODU</div>
+
+  <div id="result" class="result hidden">
+    <div class="result-card">
+      <canvas id="winnerCanvas" width="256" height="224"></canvas>
+      <h2 id="resultTitle">KAZANAN</h2>
+      <p id="resultSub"></p>
+      <p id="resultStory" class="result-story hidden"></p>
+      <div id="resultGold" class="result-gold hidden"></div>
+      <table id="resultStats" class="stats"></table>
+      <div class="result-btns">
+        <button id="btnRematch" class="btn big primary">RÖVANŞ!</button>
+        <button id="btnToLobby" class="btn big">Lobiye dön</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TUŞLAR ============ -->
+<div id="keysModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>TUŞ AYARLARI</h2>
+    <p class="hint">Değiştirmek istediğin tuşa tıkla, sonra yeni tuşa bas. Geri yöne basılı tutmak <b>blok</b> yapar; çömelerek blok alttan gelenleri durdurur.</p>
+    <div id="keysList" class="keys-list"></div>
+    <div class="combo-tips">
+      <b>Kombo ipuçları</b>
+      <ul>
+        <li>Hafif yumruk isabet edince hemen ağır yumruk / tekme / özel hareketle zincirle.</li>
+        <li>Ağır vuruşlar ve tekmeler özel harekete veya ultiye iptal edilebilir.</li>
+        <li>Çömelip ağır yumruk: havadan geleni düşürür. Çömelip tekme: rakibi yere serer.</li>
+        <li>Ulti barı vurdukça ve hasar aldıkça dolar. Dolunca karakterin parlar!</li>
+      </ul>
+    </div>
+    <div class="modal-btns">
+      <button id="btnKeysReset" class="btn small ghost">Varsayılan</button>
+      <button id="btnKeysClose" class="btn small primary">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="js/characters.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/touch.js"></script>
+<script src="js/local.js"></script>
+<script type="module" src="js/render3d.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
