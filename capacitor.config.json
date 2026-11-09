@@ -1,0 +1,10 @@
+{
+  "appId": "com.ahmethazineli.pikselarena",
+  "appName": "Piksel Arena",
+  "webDir": "public",
+  "backgroundColor": "#07060f",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false
+  }
+}

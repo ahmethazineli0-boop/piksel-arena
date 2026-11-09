@@ -1,3 +1,5 @@
 node_modules/
 cloudflared.exe
 tunnel.log
+ios/
+package-lock.json
